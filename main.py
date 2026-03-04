@@ -86,9 +86,31 @@ def init_db():
         )
         conn.commit()
 
-
+def get_timestamp() -> str:
+    return datetime.now(timezone.utc).isoformat()
 
 
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"Status": "OK"}
+
+@app.post("/tasks")
+def create_task(userTask: UserTask):
+    now = get_timestamp()
+    with get_connection() as conn:
+        cursor = conn.execute(
+            """INSERT INTO tasks (name, description, status, due_date, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            (userTask.name, userTask.description, userTask.status.value, userTask.due_date, now, now)
+        )
+        task_id = cursor.lastrowid
+    return ServerTask(
+        id=task_id,
+        name=userTask.name,
+        description=userTask.description,
+        status=userTask.status,
+        due_date=userTask.due_date,
+        created_at=now,
+        updated_at=now
+    )
