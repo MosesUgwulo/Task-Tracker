@@ -12,3 +12,4 @@ tasks.db
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+main_reference.py
