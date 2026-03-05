@@ -13,3 +13,4 @@ tasks.db
 .mypy_cache/
 .ruff_cache/
 main_reference.py
+/__pycache__

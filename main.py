@@ -114,3 +114,21 @@ def create_task(userTask: UserTask):
         created_at=now,
         updated_at=now
     )
+
+
+@app.get("/tasks")
+def list_tasks(limit: int = Query(default=10, ge=1, le=50), offset: int = Query(default=0, ge=0)):
+    with get_connection() as conn:
+        conn.row_factory = sqlite3.Row
+        cursor = conn.execute(
+            """SELECT * FROM tasks LIMIT ? OFFSET ?""",
+            (limit, offset)
+        )
+        tasks = []
+        rows = cursor.fetchall()
+        for row in rows:
+            tasks.append(ServerTask.model_validate(dict(row)))
+    return tasks
+
+        
+    
