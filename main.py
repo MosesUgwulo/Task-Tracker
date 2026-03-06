@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from operator import indexOf
 import sqlite3
 from contextlib import asynccontextmanager, contextmanager
 from datetime import datetime, timezone
@@ -130,5 +131,20 @@ def list_tasks(limit: int = Query(default=10, ge=1, le=50), offset: int = Query(
             tasks.append(ServerTask.model_validate(dict(row)))
     return tasks
 
+@app.get("/tasks/{task_id}")
+def get_task(task_id: int):
+    with get_connection() as conn:
+        conn.row_factory = sqlite3.Row
+        cursor = conn.execute(
+            """SELECT * FROM tasks WHERE id = ?""",
+            (task_id)
+        )
+        tasks = []
+        rows = cursor.fetchall()
+        for row in rows:
+            tasks.append(ServerTask.model_validate(dict(row)))
         
-    
+        if task_id <= 0 or task_id > len(tasks):
+            print("Task ID can't be less than 0 or greater than the amount of tasks")
+            return 0
+    return tasks[task_id]
