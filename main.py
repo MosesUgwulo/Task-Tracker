@@ -143,3 +143,24 @@ def get_task(task_id: int):
         if data is None:
             raise HTTPException(status_code=404, detail="Task not found")
     return ServerTask.model_validate(dict(data))
+
+@app.put("/tasks/{task_id}")
+def update_task(task_id: int, updatedTask: UpdatedTask):
+    with get_connection() as conn:
+        conn.row_factory = sqlite3.Row
+        fields = updatedTask.model_dump(exclude_unset=True)
+        set_clause = ", ".join(f"{key} = ?" for key in fields.keys())
+        now = get_timestamp()
+        values = list(fields.values()) + [now] + [task_id]
+        cursor = conn.execute(
+            f"""UPDATE tasks SET {set_clause}, updated_at = ? WHERE id = ?""",
+            values
+        )
+        if cursor.rowcount == 0:
+            raise HTTPException(status_code=404, detail="The task you're trying to update doesn't exist")
+        
+        row = conn.execute(
+            """SELECT * FROM tasks WHERE id = ?""",
+            (task_id,)
+        ).fetchone()
+    return ServerTask.model_validate(dict(row))

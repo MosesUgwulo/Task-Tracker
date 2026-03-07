@@ -18,6 +18,9 @@ API docs: `http://127.0.0.1:8000/docs`
 | GET | `/health` | Health check |
 | POST | `/tasks` | Create a task |
 | GET | `/tasks` | List tasks (paginated) |
+| GET | `/tasks/{id}` | Get a single task |
+| PUT | `/tasks/{id}` | Update a task |
+
 
 ## Example Usage (PowerShell)
 
@@ -33,6 +36,20 @@ List tasks:
 
 ```powershell
 curl.exe "http://127.0.0.1:8000/tasks?limit=50&offset=0"
+```
+
+Get a single task:
+
+```powershell
+curl.exe "http://127.0.0.1:8000/tasks/1"
+```
+
+Update a task:
+
+```powershell
+curl.exe -X PUT "http://127.0.0.1:8000/tasks/1" `
+  -H "Content-Type: application/json" `
+  -d '{\"status\":\"done\"}'
 ```
 
 ## Roadmap
