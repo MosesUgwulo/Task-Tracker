@@ -105,7 +105,7 @@ def create_task(userTask: UserTask):
             """,
             (userTask.name, userTask.description, userTask.status.value, userTask.due_date, now, now)
         )
-        task_id = cursor.lastrowid
+        task_id = int(cursor.lastrowid)
     return ServerTask(
         id=task_id,
         name=userTask.name,
@@ -137,14 +137,9 @@ def get_task(task_id: int):
         conn.row_factory = sqlite3.Row
         cursor = conn.execute(
             """SELECT * FROM tasks WHERE id = ?""",
-            (task_id)
+            (task_id,)
         )
-        tasks = []
-        rows = cursor.fetchall()
-        for row in rows:
-            tasks.append(ServerTask.model_validate(dict(row)))
-        
-        if task_id <= 0 or task_id > len(tasks):
-            print("Task ID can't be less than 0 or greater than the amount of tasks")
-            return 0
-    return tasks[task_id]
+        data = cursor.fetchone()
+        if data is None:
+            raise HTTPException(status_code=404, detail="Task not found")
+    return ServerTask.model_validate(dict(data))
