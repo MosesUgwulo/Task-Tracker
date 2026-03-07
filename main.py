@@ -90,7 +90,6 @@ def init_db():
 def get_timestamp() -> str:
     return datetime.now(timezone.utc).isoformat()
 
-
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"Status": "OK"}
@@ -164,3 +163,15 @@ def update_task(task_id: int, updatedTask: UpdatedTask):
             (task_id,)
         ).fetchone()
     return ServerTask.model_validate(dict(row))
+
+@app.delete("/tasks/{task_id}")
+def delete_task(task_id: int):
+    with get_connection() as conn:
+        conn.row_factory = sqlite3.Row
+        cursor = conn.execute(
+            """DELETE FROM tasks WHERE id = ?""",
+            (task_id,)
+        )
+        if cursor.rowcount == 0:
+            raise HTTPException(status_code=404, detail="Task not found")
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

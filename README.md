@@ -21,6 +21,7 @@ API docs: `http://127.0.0.1:8000/docs`
 | GET | `/tasks` | List tasks (paginated) |
 | GET | `/tasks/{id}` | Get a single task |
 | PUT | `/tasks/{id}` | Update a task |
+| DELETE | `/tasks/{id}` | Delete a task |
 
 
 ## Example Usage (PowerShell)
@@ -51,6 +52,12 @@ Update a task:
 curl.exe -X PUT "http://127.0.0.1:8000/tasks/1" `
   -H "Content-Type: application/json" `
   -d '{\"status\":\"done\"}'
+```
+
+Delete a task:
+
+```powershell
+curl.exe -X DELETE "http://127.0.0.1:8000/tasks/1"
 ```
 
 ## Roadmap
