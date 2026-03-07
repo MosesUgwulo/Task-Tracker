@@ -5,6 +5,7 @@ A CRUD API built with FastAPI and SQLite, designed as the foundation for a full 
 ## Setup
 
 ```powershell
+python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
 .\.venv\Scripts\python.exe -m uvicorn main:app --reload
 ```
