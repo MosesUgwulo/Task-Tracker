@@ -155,7 +155,7 @@ def update_task(task_id: int, updatedTask: UpdatedTask):
             f"""UPDATE tasks SET {set_clause}, updated_at = ? WHERE id = ?""",
             values
         )
-        if cursor.rowcount == 0:
+        if cursor.rowcount == 0: # UPDATE doesn't return rows, so I use cursor.rowcount to check how many rows are affected
             raise HTTPException(status_code=404, detail="The task you're trying to update doesn't exist")
         
         row = conn.execute(
@@ -172,6 +172,6 @@ def delete_task(task_id: int):
             """DELETE FROM tasks WHERE id = ?""",
             (task_id,)
         )
-        if cursor.rowcount == 0:
+        if cursor.rowcount == 0: # DELETE doesn't return rows, so I use cursor.rowcount to check how many rows are affected
             raise HTTPException(status_code=404, detail="Task not found")
     return Response(status_code=status.HTTP_204_NO_CONTENT)
