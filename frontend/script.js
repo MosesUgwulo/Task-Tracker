@@ -11,10 +11,10 @@ async function getTasks() {
     let html = "";
     tasks.forEach(task => {
         html += `<div>
-            <h3>${task.name}</h3>
-            <p>${task.description}</p>
-            <p>${task.status}</p>
-            <p>${task.due_date}</p>
+            <h3>Name: ${task.name}</h3>
+            <p>Description: ${task.description}</p>
+            <p>Status: ${task.status}</p>
+            <p>Due Date: ${task.due_date}</p>
         </div>`;
         
     });
