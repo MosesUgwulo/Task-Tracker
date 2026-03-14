@@ -8,6 +8,7 @@ from typing import Any
 
 from fastapi import FastAPI, HTTPException, Query, Response, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, model_validator
 from enum import Enum
 
@@ -184,3 +185,5 @@ def delete_task(task_id: int):
         if cursor.rowcount == 0: # DELETE doesn't return rows, so I use cursor.rowcount to check how many rows are affected
             raise HTTPException(status_code=404, detail="Task not found")
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")

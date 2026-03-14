@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Task Tracker</title>
+        <link rel="stylesheet" href="styles.css">
+    </head>
+    <body>
+        <h1>Task Tracker</h1>
+        <div id="task-list"></div>
+        <form id="task-form">
+            <!-- Task input fields, name and status are required, description and due_date are optional -->
+            <input type="text" id="task-input" placeholder="Add a new task" required>
+            <input type="text" id="task-description" placeholder="Description (optional)">
+            <input type="date" id="task-due-date">
+            <select id="task-status" required>
+                <option value="" disabled selected>Select status</option>
+                <option value="todo">Todo</option>
+                <option value="in_progress">In Progress</option>
+                <option value="done">Done</option>
+            </select>
+            <button type="submit">Add Task</button>
+        </form>
+        <script src="script.js"></script>
+    </body>
+</html>
