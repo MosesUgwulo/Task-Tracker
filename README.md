@@ -10,7 +10,10 @@ python -m venv .venv
 .\.venv\Scripts\python.exe -m uvicorn main:app --reload
 ```
 
-API docs: `http://127.0.0.1:8000/docs`
+Once running, you can use the app in two ways:
+
+- **Frontend:** `http://127.0.0.1:8000` — a simple HTML interface for managing tasks
+- **API docs:** `http://127.0.0.1:8000/docs` — interactive Swagger UI for testing endpoints directly
 
 ## Endpoints
 
