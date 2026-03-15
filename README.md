@@ -68,4 +68,5 @@ curl.exe -X DELETE "http://127.0.0.1:8000/tasks/1"
 - [ ] Dockerise and swap SQLite for PostgreSQL
 - [ ] CI/CD pipeline with GitHub Actions
 - [ ] Deploy to Azure with Terraform
+- [ ] Kubernetes orchestration
 - [ ] Monitoring and observability
