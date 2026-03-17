@@ -1,10 +1,8 @@
 from __future__ import annotations
 
-from operator import indexOf
 import sqlite3
 from contextlib import asynccontextmanager, contextmanager
-from datetime import datetime, timezone
-from typing import Any
+from datetime import datetime, timezone, date
 
 from fastapi import FastAPI, HTTPException, Query, Response, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -46,13 +44,13 @@ class UserTask(BaseModel):
     name: str
     description: str | None = None
     status: Status
-    due_date: str | None = None
+    due_date: date | None = Field(default=None, description="Format: YYYY-MM-DD (e.g. 2026-03-17)")
 
 class UpdatedTask(BaseModel):
     name: str | None = None
     description: str | None = None
     status: Status | None = None
-    due_date: str | None = None
+    due_date: date | None = Field(default=None, description="Format: YYYY-MM-DD (e.g. 2026-03-17)")
 
     @model_validator(mode="after")
     def check_if_empty(self):
@@ -65,7 +63,7 @@ class ServerTask(BaseModel):
     name: str
     description: str | None = None
     status: Status
-    due_date: str | None = None
+    due_date: date | None = None
     created_at: str
     updated_at: str
 
