@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-import sqlite3
+import os
+import psycopg2
+import psycopg2.extras
 from contextlib import asynccontextmanager, contextmanager
 from datetime import datetime, timezone, date
 
@@ -10,7 +12,11 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, model_validator
 from enum import Enum
 
-DB_PATH = "tasks.db"
+POSTGRES_HOST = os.environ.get("POSTGRES_HOST", "db")
+POSTGRES_PORT = os.environ.get("POSTGRES_PORT", "5432")
+POSTGRES_DB = os.environ.get("POSTGRES_DB", "task_tracker_db")
+POSTGRES_USER = os.environ.get("POSTGRES_USER", "user")
+POSTGRES_PASSWORD = os.environ.get("POSTGRES_PASSWORD", "password")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -70,7 +76,13 @@ class ServerTask(BaseModel):
 
 @contextmanager
 def get_connection():
-    conn = sqlite3.connect(DB_PATH)
+    conn = psycopg2.connect(
+        host=POSTGRES_HOST,
+        port=POSTGRES_PORT,
+        database=POSTGRES_DB,
+        user=POSTGRES_USER,
+        password=POSTGRES_PASSWORD
+    )
     try:
         yield conn
         conn.commit()
@@ -79,14 +91,21 @@ def get_connection():
 
 
 def init_db():
-    with sqlite3.connect(DB_PATH) as conn:
-        conn.execute(
+    with psycopg2.connect(
+        host=POSTGRES_HOST,
+        port=POSTGRES_PORT,
+        database=POSTGRES_DB,
+        user=POSTGRES_USER,
+        password=POSTGRES_PASSWORD
+    ) as conn:
+        cursor = conn.cursor()
+        cursor.execute(
             """
             CREATE TABLE IF NOT EXISTS tasks (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
                 name TEXT NOT NULL,
                 description TEXT,
-                status TEXT NOT NULL DEFAULT "todo",
+                status TEXT NOT NULL DEFAULT 'todo',
                 due_date TEXT,
                 created_at TEXT NOT NULL,
                 updated_at TEXT NOT NULL
@@ -106,13 +125,15 @@ def health() -> dict[str, str]:
 def create_task(userTask: UserTask):
     now = get_timestamp()
     with get_connection() as conn:
-        cursor = conn.execute(
+        cursor = conn.cursor()
+        cursor.execute(
             """INSERT INTO tasks (name, description, status, due_date, created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?)
+                VALUES (%s, %s, %s, %s, %s, %s)
+                RETURNING id
             """,
             (userTask.name, userTask.description, userTask.status.value, userTask.due_date, now, now)
         )
-        task_id = int(cursor.lastrowid)
+        task_id = cursor.fetchone()[0]
     return ServerTask(
         id=task_id,
         name=userTask.name,
@@ -127,9 +148,9 @@ def create_task(userTask: UserTask):
 @app.get("/tasks")
 def list_tasks(limit: int = Query(default=10, ge=1, le=50), offset: int = Query(default=0, ge=0)):
     with get_connection() as conn:
-        conn.row_factory = sqlite3.Row
-        cursor = conn.execute(
-            """SELECT * FROM tasks LIMIT ? OFFSET ?""",
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cursor.execute(
+            """SELECT * FROM tasks LIMIT %s OFFSET %s""",
             (limit, offset)
         )
         tasks = []
@@ -141,9 +162,9 @@ def list_tasks(limit: int = Query(default=10, ge=1, le=50), offset: int = Query(
 @app.get("/tasks/{task_id}")
 def get_task(task_id: int):
     with get_connection() as conn:
-        conn.row_factory = sqlite3.Row
-        cursor = conn.execute(
-            """SELECT * FROM tasks WHERE id = ?""",
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cursor.execute(
+            """SELECT * FROM tasks WHERE id = %s""",
             (task_id,)
         )
         data = cursor.fetchone()
@@ -154,30 +175,31 @@ def get_task(task_id: int):
 @app.put("/tasks/{task_id}")
 def update_task(task_id: int, updatedTask: UpdatedTask):
     with get_connection() as conn:
-        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         fields = updatedTask.model_dump(exclude_unset=True)
-        set_clause = ", ".join(f"{key} = ?" for key in fields.keys())
+        set_clause = ", ".join(f"{key} = %s" for key in fields.keys())
         now = get_timestamp()
         values = list(fields.values()) + [now] + [task_id]
-        cursor = conn.execute(
-            f"""UPDATE tasks SET {set_clause}, updated_at = ? WHERE id = ?""",
+        cursor.execute(
+            f"""UPDATE tasks SET {set_clause}, updated_at = %s WHERE id = %s""",
             values
         )
         if cursor.rowcount == 0: # UPDATE doesn't return rows, so I use cursor.rowcount to check how many rows are affected
             raise HTTPException(status_code=404, detail="The task you're trying to update doesn't exist")
         
-        row = conn.execute(
-            """SELECT * FROM tasks WHERE id = ?""",
+        cursor.execute(
+            """SELECT * FROM tasks WHERE id = %s""",
             (task_id,)
-        ).fetchone()
+        )
+        row = cursor.fetchone()
     return ServerTask.model_validate(dict(row))
 
 @app.delete("/tasks/{task_id}")
 def delete_task(task_id: int):
     with get_connection() as conn:
-        conn.row_factory = sqlite3.Row
-        cursor = conn.execute(
-            """DELETE FROM tasks WHERE id = ?""",
+        cursor = conn.cursor()
+        cursor.execute(
+            """DELETE FROM tasks WHERE id = %s""",
             (task_id,)
         )
         if cursor.rowcount == 0: # DELETE doesn't return rows, so I use cursor.rowcount to check how many rows are affected

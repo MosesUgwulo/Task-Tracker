@@ -3,7 +3,8 @@ services:
     build:
       context: .
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     ports:
       - "8000:8000"
     environment:
@@ -14,7 +15,7 @@ services:
       POSTGRES_PORT: 5432
 
   db:
-    image: postgres:latest
+    image: postgres:17
     environment:
       POSTGRES_USER: user
       POSTGRES_PASSWORD: password
@@ -23,6 +24,11 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d task_tracker_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 volumes:
   pgdata:
