@@ -1,8 +1,24 @@
 # Task-Tracker
 
-A CRUD API built with FastAPI and SQLite, designed as the foundation for a full DevOps pipeline — Docker, Azure, Terraform, and CI/CD.
+A CRUD API built with FastAPI and PostgreSQL, containerised with Docker. Designed as the foundation for a full DevOps pipeline — Azure, Terraform, and CI/CD.
 
 ## Setup
+
+### Docker (recommended)
+
+```powershell
+docker-compose up --build
+```
+
+This starts both the app and a PostgreSQL database. Data is persisted via a Docker volume.
+
+To stop:
+
+```powershell
+docker-compose down
+```
+
+### Local Development
 
 ```powershell
 python -m venv .venv
@@ -65,7 +81,7 @@ curl.exe -X DELETE "http://127.0.0.1:8000/tasks/1"
 
 ## Roadmap
 
-- [ ] Dockerise and swap SQLite for PostgreSQL
+- [x] Dockerise and swap SQLite for PostgreSQL
 - [ ] CI/CD pipeline with GitHub Actions
 - [ ] Deploy to Azure with Terraform
 - [ ] Kubernetes orchestration

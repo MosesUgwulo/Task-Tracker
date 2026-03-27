@@ -1,4 +1,4 @@
-const BASE_URL = "http://127.0.0.1:8000";
+const BASE_URL = "";
 
 // Escapes special characters so task data can safely be stored in HTML data-* attributes.
 // Without this, characters like " or & would break the HTML attribute and corrupt the value.
