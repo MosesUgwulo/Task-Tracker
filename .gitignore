@@ -14,6 +14,8 @@ tasks.db
 .ruff_cache/
 main_reference.py
 /__pycache__
-/.terraform
 myplan
-terraform.tfstate
+/terraform/.terraform
+*.tfstate
+*.backup
+*.info
