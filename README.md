@@ -1,16 +1,16 @@
 # Task-Tracker
 
-A CRUD API built with FastAPI and PostgreSQL, containerised with Docker. Designed as the foundation for a full DevOps pipeline — Azure, Terraform, and CI/CD.
+A CRUD API built with FastAPI and PostgreSQL, designed as the foundation for a full DevOps pipeline — Docker, Azure, Terraform, and CI/CD.
 
-## Setup
+## Local Setup
 
-### Docker (recommended)
+### Run with Docker (recommended)
 
 ```powershell
 docker-compose up --build
 ```
 
-This starts both the app and a PostgreSQL database. Data is persisted via a Docker volume.
+This starts up two containers: The FastAPI app and a PostgreSQL database. Data is persisted via a Docker volume.
 
 To stop:
 
@@ -18,13 +18,15 @@ To stop:
 docker-compose down
 ```
 
-### Local Development
+### Local Development (Running without Docker)
 
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
 .\.venv\Scripts\python.exe -m uvicorn main:app --reload
 ```
+
+Note: Running without Docker requires a PostgreSQL instance running separately with the connection details matching the environment variables in `main.py`.
 
 Once running, you can use the app in two ways:
 
@@ -79,10 +81,38 @@ Delete a task:
 curl.exe -X DELETE "http://127.0.0.1:8000/tasks/1"
 ```
 
+## Azure Infrastructure (Terraform)
+ 
+The `terraform/` directory contains the infrastructure-as-code for deploying to Azure. Resources provisioned:
+ 
+- Resource Group
+- Azure Container Registry (ACR)
+- App Service Plan (B1 Linux)
+- Linux Web App (App Service for Containers)
+- PostgreSQL Flexible Server + database + firewall rule
+ 
+### Deploy
+ 
+```powershell
+cd terraform
+az login
+terraform init
+terraform plan
+terraform apply
+```
+ 
+### Tear down
+ 
+```powershell
+terraform destroy
+```
+
 ## Roadmap
 
+- [x] FastAPI CRUD API with SQLite
 - [x] Dockerise and swap SQLite for PostgreSQL
+- [x] Deploy to Azure with Terraform
+- [ ] Wire up App Service to ACR and PostgreSQL
 - [ ] CI/CD pipeline with GitHub Actions
-- [ ] Deploy to Azure with Terraform
 - [ ] Kubernetes orchestration
 - [ ] Monitoring and observability
