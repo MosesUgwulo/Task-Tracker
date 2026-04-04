@@ -46,7 +46,24 @@ resource "azurerm_linux_web_app" "alwa" {
   resource_group_name = azurerm_resource_group.rg.name
   location            = azurerm_resource_group.rg.location
   service_plan_id     = azurerm_service_plan.asp.id
-  site_config {}
+
+  site_config {
+    application_stack {
+      docker_registry_url = "https://${azurerm_container_registry.acr.login_server}"
+      docker_registry_username = azurerm_container_registry.acr.admin_username
+      docker_registry_password = azurerm_container_registry.acr.admin_password
+      docker_image_name = "task-tracker:latest"
+    }
+  }
+
+  app_settings = { 
+    "POSTGRES_HOST" = azurerm_postgresql_flexible_server.apfs.fqdn,
+    "POSTGRES_PORT" = "5432",
+    "POSTGRES_DB" = azurerm_postgresql_flexible_server_database.apfdb.name,
+    "POSTGRES_USER" = azurerm_postgresql_flexible_server.apfs.administrator_login,
+    "POSTGRES_PASSWORD" = var.postgresql_password,
+    "WEBSITES_PORT" = "8000"
+  }
 }
 
 # Create an Azure PostgreSQL Flexible Server
@@ -57,7 +74,7 @@ resource "azurerm_postgresql_flexible_server" "apfs" {
   version                       = "17"
   public_network_access_enabled = true
   administrator_login           = "tasktrackeradmin"
-  administrator_password        = "TaskTracker@2026"
+  administrator_password        = var.postgresql_password
 
   sku_name = "B_Standard_B1ms"
 }

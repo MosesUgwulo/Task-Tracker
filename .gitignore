@@ -19,3 +19,4 @@ myplan
 *.tfstate
 *.backup
 *.info
+*.tfvars
