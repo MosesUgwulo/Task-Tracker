@@ -82,17 +82,28 @@ curl.exe -X DELETE "http://127.0.0.1:8000/tasks/1"
 ```
 
 ## Azure Infrastructure (Terraform)
- 
+
 The `terraform/` directory contains the infrastructure-as-code for deploying to Azure. Resources provisioned:
- 
+
 - Resource Group
 - Azure Container Registry (ACR)
 - App Service Plan (B1 Linux)
 - Linux Web App (App Service for Containers)
 - PostgreSQL Flexible Server + database + firewall rule
- 
-### Deploy
- 
+
+The App Service is configured to pull a Docker image from ACR and connect to the PostgreSQL database. Connection details are injected as environment variables via Terraform's `app_settings`.
+
+### Secrets
+
+The PostgreSQL admin password is stored in a `terraform.tfvars` file which is gitignored. To set up:
+
+```powershell
+# Create terraform/terraform.tfvars with:
+postgresql_password = "your-password-here"
+```
+
+### Deploy Infrastructure
+
 ```powershell
 cd terraform
 az login
@@ -100,19 +111,70 @@ terraform init
 terraform plan
 terraform apply
 ```
- 
-### Tear down
- 
+
+### Push Docker Image to ACR
+
+After the infrastructure is up, build and push the container image:
+
+Note: This is now automated via the GitHub Actions workflow
+
 ```powershell
+az acr login --name TaskTrackerACR25
+docker build -t task-tracker .
+docker tag task-tracker tasktrackeracr25.azurecr.io/task-tracker:latest
+docker push tasktrackeracr25.azurecr.io/task-tracker:latest
+```
+
+### Tear Down
+
+```powershell
+cd terraform
 terraform destroy
 ```
+
+## CI/CD (GitHub Actions)
+
+The `.github/workflows/deploy-docker-image.yaml` workflow automates the Docker build and deployment process. It uses `workflow_dispatch` (manual trigger) so it can be run on demand when the Azure infrastructure is up.
+
+The pipeline:
+
+1. Checks out the repo
+2. Authenticates with Azure using a service principal
+3. Logs in to ACR
+4. Builds and pushes the Docker image to ACR
+5. Restarts the App Service to pull the new image
+
+### Setup
+
+A service principal is required for GitHub Actions to authenticate with Azure:
+```powershell
+az ad sp create-for-rbac --name "service-principal-name" --role contributor --scopes /subscriptions/<SUBSCRIPTION_ID> --sdk-auth
+```
+
+The JSON output looks like:
+```json
+{
+  "clientId": "...",
+  "clientSecret": "...",
+  "subscriptionId": "...",
+  "tenantId": "..."
+}
+```
+
+Save the entire JSON block as a single GitHub repository secret named `AZURE_CREDENTIALS` under Settings → Secrets and variables → Actions.
+
+### Running the Pipeline
+
+1. Ensure Azure infrastructure is up (`terraform apply`)
+2. Go to the repo → Actions → "Deploy Docker Image" → "Run workflow"
+3. The workflow builds, pushes, and deploys automatically
 
 ## Roadmap
 
 - [x] FastAPI CRUD API with SQLite
 - [x] Dockerise and swap SQLite for PostgreSQL
 - [x] Deploy to Azure with Terraform
-- [ ] Wire up App Service to ACR and PostgreSQL
-- [ ] CI/CD pipeline with GitHub Actions
+- [x] Wire up App Service to ACR and PostgreSQL
+- [x] CI/CD pipeline with GitHub Actions
 - [ ] Kubernetes orchestration
 - [ ] Monitoring and observability
