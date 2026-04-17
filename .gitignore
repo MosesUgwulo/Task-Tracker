@@ -20,3 +20,4 @@ myplan
 *.backup
 *.info
 *.tfvars
+.env
