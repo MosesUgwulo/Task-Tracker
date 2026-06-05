@@ -91,7 +91,8 @@ resource "azurerm_postgresql_flexible_server_database" "apfdb" {
   # }
 }
 
-# Create a firewall rule to allow access to the PostgreSQL Flexible Server from all IP addresses (for testing purposes)
+# Lets Azure services like App Service connect to the PostgreSQL server
+# 0.0.0.0 to 0.0.0.0 allows Azure traffic only
 resource "azurerm_postgresql_flexible_server_firewall_rule" "apfsfr" {
   name             = "TaskTracker-FW"
   server_id        = azurerm_postgresql_flexible_server.apfs.id
