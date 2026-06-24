@@ -108,7 +108,6 @@ postgresql_password = "your-password-here"
 cd terraform
 az login
 terraform init
-terraform plan
 terraform apply
 ```
 
